@@ -1,17 +1,5 @@
 (ns binj.core)
 
-
-
-(defn << [& rest]
-            (let [rest 
-              (if (and (= (count rest))
-                       (string? (first rest)))
-                  (map int (first rest))
-                  rest)]
-                  (flatten (map (fn [val]
-                                (if (seq? val)
-                                    (apply decimal-to-bytelist val)
-                                    (bit-and val 0xff))) rest))))
 (defn decimal-to-bytelist 
           ([val] (decimal-to-bytelist val 8 1))
         ([val bits] (decimal-to-bytelist val bits 1))
@@ -23,6 +11,7 @@
                      (conj acc (bit-and val (dec (bit-shift-left 1 bits))))
                      (recur (- bits 8) (bit-shift-right val 8) (conj acc (bit-and val 0xff)))))))
 
+
 (defn- reduce-bl [bl]
         (reduce + (map #(* (bit-and %1 0xff) %2)
                            bl
@@ -32,24 +21,20 @@
           ([bytelist] (reduce-bl (reverse bytelist)))
           ([bytelist n] (reduce-bl (take n (reverse bytelist)))))
 
-(defn destructure-binvec [bin-vec]
-            (let [bdg-pairs (partition 2 (first bin-vec))
-                 bin (second bin-vec)]
-                 (loop [bdgs (reverse bdg-pairs)
-                    acc '()
-                    bin (if (number? bin) bin
-                            (bytelist-to-decimal bin))]
-                    (if (empty? bdgs) acc 
-                        (let [bdg (first bdgs)
-                             sym (first bdg)
-                             val (second bdg)]
-                             (recur (rest bdgs)
-                                    (conj (conj acc
-                                                (bit-and bin (dec (bit-shift-left 1 val))))
-                                          sym)
-                                    (bit-shift-right bin val)))))))
+(defn << [& rest]
+            (let [rest 
+              (if (and (= (count rest))
+                       (string? (first rest)))
+                  (map int (first rest))
+                  rest)]
+                  (flatten (map (fn [val]
+                                (if (seq? val)
+                                    (apply decimal-to-bytelist val)
+                                    (bit-and val 0xff))) rest))))
 
-(defn foo [bindings]
+
+
+(defn prepare-binding-vec [bindings]
         (let [bdg-pair (partition 2 bindings)]
              (loop [bdg bdg-pair
                 acc []]
@@ -66,7 +51,7 @@
                               (conj (conj acc bin) val))))))))
 
 
-(defmacro let-bin [bindings & body]
-                (let [bin (foo bindings)]
-                     `(let [~@(destructure bin)] ~@body)))
+(defmacro bin-let [bindings & body]
+  (let [bindings (prepare-binding-vec bindings)]
+                     `(let [~@(destructure bindings)] ~@body)))
 
