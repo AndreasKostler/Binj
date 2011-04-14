@@ -4,7 +4,31 @@ Erlang style Bin for Clojure
 
 ## Usage
 
-ToDo
+I'm quite impressed with Erlang's Bin datatype and binary pattern matching. 
+I've tried to replicate some of the coolness in Clojure..
+So, what can you do with it? 
+
+Create a bin: 
+  user> (<< 1 17 42)
+  (1 17 42)
+ 
+  user> (<< [0xf0f0 16] 1 17)
+  (240 240 1 17)
+
+  user> (<< "abc")
+  (97 98 99)
+
+More interesting is probably constructing a bin from a set of bound variables:
+  user> (let [A 1
+                     B 17
+                     C 42
+                     bin (<< A B [C 16])] bin)
+  (1 17 0 42)
+
+A bin can also be used for matching: 
+  user> (bin-let [[D 16 E 8 F 8] (1 17 00 42)] 
+              [D E F])
+  [273 0 42]
 
 ## License
 
