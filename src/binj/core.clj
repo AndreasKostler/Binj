@@ -32,7 +32,22 @@
                                     (apply decimal-to-bytelist val)
                                     (bit-and val 0xff))) rest))))
 
-
+(defn destructure-binvec [bin-vec]
+            (let [bdg-pairs (partition 2 (first bin-vec))
+                 bin (second bin-vec)]
+                 (loop [bdgs (reverse bdg-pairs)
+                    acc '()
+                    bin (if (number? bin) bin
+                            (bytelist-to-decimal bin))]
+                    (if (empty? bdgs) acc 
+                        (let [bdg (first bdgs)
+                             sym (first bdg)
+                             val (second bdg)]
+                             (recur (rest bdgs)
+                                    (conj (conj acc
+                                                (bit-and bin (dec (bit-shift-left 1 val))))
+                                          sym)
+                                    (bit-shift-right bin val)))))))
 
 (defn prepare-binding-vec [bindings]
         (let [bdg-pair (partition 2 bindings)]
